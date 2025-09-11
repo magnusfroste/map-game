@@ -121,11 +121,15 @@ const GeographyQuiz = () => {
         zoom: 2,
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
       map.current.on('click', handleMapClick);
       
       map.current.on('load', () => {
         console.log('Mapbox map loaded successfully');
+        try {
+          map.current?.resize();
+          const canvas = map.current?.getCanvas();
+          if (canvas) canvas.style.cursor = 'crosshair';
+        } catch {}
       });
       
       map.current.on('error', (e) => {
@@ -234,7 +238,7 @@ const GeographyQuiz = () => {
       <div className="flex-1 relative min-h-[400px]">
         <div 
           ref={mapContainer} 
-          className="absolute inset-0 w-full h-full" 
+          className="absolute inset-0 w-full h-full z-0 pointer-events-auto" 
           style={{ minHeight: '400px' }}
         />
         
