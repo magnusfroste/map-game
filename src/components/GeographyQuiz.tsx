@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { geographyQuestions, categories, GeographyQuestion } from '@/data/geographyQuestions';
 import { Progress } from '@/components/ui/progress';
+import { toast } from '@/components/ui/use-toast';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGl0ZWl0IiwiYSI6ImNqenU3MjdocjBjMmszb3Fpa3hyZjNzb28ifQ.-N7x3KsTUFpWU7oVNZVWxw';
 
@@ -74,9 +75,10 @@ const GeographyQuiz = () => {
   };
 
   const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
-    if (!currentQuestion || showAnswer) return;
+    if (!currentQuestion || showAnswer || !map.current) return;
 
     const { lng, lat } = e.lngLat;
+    console.log('Map clicked at', { lat, lng, target: currentQuestion.name });
     
     // Lägg till användarens markör
     const newUserMarker = new mapboxgl.Marker({ color: '#3b82f6' })
@@ -87,6 +89,7 @@ const GeographyQuiz = () => {
     // Beräkna avstånd
     const distance = calculateDistance(lat, lng, currentQuestion.lat, currentQuestion.lng);
     const toleranceInKm = currentQuestion.tolerance * 111; // Ungefär km per grad
+    console.log('Distance & tolerance (km):', { distance: Math.round(distance), toleranceInKm });
     
     // Visa rätt svar
     const newCorrectMarker = new mapboxgl.Marker({ color: '#16a34a' })
@@ -102,9 +105,22 @@ const GeographyQuiz = () => {
       setScore(prev => prev + 1);
       setFeedback(`Rätt! ${currentQuestion.name} ligger här. Avstånd: ${Math.round(distance)} km`);
       setFeedbackType('success');
+      try {
+        toast({
+          title: 'Rätt svar!',
+          description: `${currentQuestion.name} — ${Math.round(distance)} km ifrån. Bra jobbat!`,
+        });
+      } catch {}
     } else {
       setFeedback(`Fel. ${currentQuestion.name} ligger här (grön markör). Ditt svar var ${Math.round(distance)} km bort.`);
       setFeedbackType('warning');
+      try {
+        toast({
+          title: 'Inte riktigt',
+          description: `${currentQuestion.name} låg ${Math.round(distance)} km från din markering.`,
+          variant: 'destructive',
+        });
+      } catch {}
     }
   };
 
