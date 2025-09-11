@@ -7,10 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { geographyQuestions, categories, GeographyQuestion } from '@/data/geographyQuestions';
 import { Progress } from '@/components/ui/progress';
 
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibGl0ZWl0IiwiYSI6ImNqenU3MjdocjBjMmszb3Fpa3hyZjNzb28ifQ.-N7x3KsTUFpWU7oVNZVWxw';
+
 const GeographyQuiz = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
   const [currentQuestion, setCurrentQuestion] = useState<GeographyQuestion | null>(null);
   const [score, setScore] = useState(0);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
@@ -108,9 +109,9 @@ const GeographyQuiz = () => {
   };
 
   const initializeMap = () => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -124,11 +125,6 @@ const GeographyQuiz = () => {
   };
 
   const startGame = () => {
-    if (!mapboxToken.trim()) {
-      setFeedback('Vänligen ange din Mapbox token först');
-      setFeedbackType('error');
-      return;
-    }
     setGameStarted(true);
     initializeMap();
     setTimeout(() => startNewQuestion(), 1000);
@@ -155,25 +151,6 @@ const GeographyQuiz = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Mapbox Public Token (krävs för kartan):
-              </label>
-              <input
-                type="text"
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                placeholder="Ange din Mapbox token..."
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Hämta din token från{' '}
-                <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  mapbox.com
-                </a>
-              </p>
-            </div>
-            
-            <div>
               <label className="block text-sm font-medium mb-2">Välj kategori:</label>
               <select 
                 value={selectedCategory} 
@@ -186,16 +163,6 @@ const GeographyQuiz = () => {
                 ))}
               </select>
             </div>
-            
-            {feedback && (
-              <div className={`p-3 rounded-md text-sm ${
-                feedbackType === 'error' ? 'bg-destructive text-destructive-foreground' :
-                feedbackType === 'warning' ? 'bg-warning text-warning-foreground' :
-                'bg-success text-success-foreground'
-              }`}>
-                {feedback}
-              </div>
-            )}
             
             <Button onClick={startGame} className="w-full" size="lg">
               Starta karttest
