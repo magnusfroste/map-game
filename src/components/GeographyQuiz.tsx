@@ -111,23 +111,43 @@ const GeographyQuiz = () => {
   const initializeMap = () => {
     if (!mapContainer.current) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [-60, 20], // Centrerat över Amerika
-      zoom: 2,
-    });
+    try {
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [-60, 20], // Centrerat över Amerika
+        zoom: 2,
+      });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.current.on('click', handleMapClick);
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current.on('click', handleMapClick);
+      
+      map.current.on('load', () => {
+        console.log('Mapbox map loaded successfully');
+      });
+      
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e);
+        setFeedback('Fel vid laddning av karta. Kontrollera internetanslutningen.');
+        setFeedbackType('error');
+      });
+      
+    } catch (error) {
+      console.error('Failed to initialize Mapbox:', error);
+      setFeedback('Kunde inte ladda kartan. Kontrollera Mapbox API-nyckeln.');
+      setFeedbackType('error');
+    }
   };
 
   const startGame = () => {
     setGameStarted(true);
-    initializeMap();
-    setTimeout(() => startNewQuestion(), 1000);
+    // Ge React tid att rendera map container innan vi initierar kartan
+    setTimeout(() => {
+      initializeMap();
+      setTimeout(() => startNewQuestion(), 500);
+    }, 100);
   };
 
   const resetGame = () => {
@@ -163,6 +183,12 @@ const GeographyQuiz = () => {
                 ))}
               </select>
             </div>
+            
+            {feedback && feedbackType === 'error' && (
+              <div className="p-3 rounded-md text-sm bg-destructive text-destructive-foreground mb-4">
+                {feedback}
+              </div>
+            )}
             
             <Button onClick={startGame} className="w-full" size="lg">
               Starta karttest
@@ -205,8 +231,12 @@ const GeographyQuiz = () => {
       </div>
 
       {/* Map */}
-      <div className="flex-1 relative">
-        <div ref={mapContainer} className="absolute inset-0" />
+      <div className="flex-1 relative min-h-[400px]">
+        <div 
+          ref={mapContainer} 
+          className="absolute inset-0 w-full h-full" 
+          style={{ minHeight: '400px' }}
+        />
         
         {feedback && (
           <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-lg shadow-lg z-10 max-w-sm text-center ${
