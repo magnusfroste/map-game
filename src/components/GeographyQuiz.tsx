@@ -25,6 +25,7 @@ const GeographyQuiz = () => {
   const [userMarker, setUserMarker] = useState<mapboxgl.Marker | null>(null);
   const [correctMarker, setCorrectMarker] = useState<mapboxgl.Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [mapboxToken, setMapboxToken] = useState('');
 
   const getRandomQuestion = () => {
     const availableQuestions = geographyQuestions.filter(q => 
@@ -129,7 +130,7 @@ const GeographyQuiz = () => {
     if (!mapContainer.current) return;
 
     try {
-      mapboxgl.accessToken = MAPBOX_TOKEN;
+      mapboxgl.accessToken = (mapboxToken?.trim() || MAPBOX_TOKEN);
       
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -212,6 +213,18 @@ const GeographyQuiz = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="pt-1">
+              <label className="block text-sm font-medium mb-2">Mapbox public token</label>
+              <input
+                type="text"
+                value={mapboxToken}
+                onChange={(e) => setMapboxToken(e.target.value)}
+                placeholder="pk.eyJ..."
+                className="w-full px-3 py-2 border rounded-md"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Hämta din token på mapbox.com → Tokens.</p>
             </div>
             
             {feedback && feedbackType === 'error' && (
