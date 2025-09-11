@@ -44,16 +44,25 @@ const GeographyQuiz = () => {
   const startNewQuestion = () => {
     const newQuestion = getRandomQuestion();
     if (!newQuestion) {
+      // Spelet klart
+      setCurrentQuestion(null);
       setFeedback(`Spelet klart! Slutresultat: ${score}/${questionsAnswered}`);
       setFeedbackType('success');
+      // Rensa markörer
+      if (userMarker) userMarker.remove();
+      if (correctMarker) correctMarker.remove();
+      answerMarkers.forEach(marker => marker.remove());
+      setUserMarker(null);
+      setCorrectMarker(null);
+      setAnswerMarkers([]);
       return;
     }
-    
+
     setCurrentQuestion(newQuestion);
     setFeedback('');
     setFeedbackType('');
     setShowAnswer(false);
-    
+
     // Ta bort föregående markörer
     if (userMarker) {
       userMarker.remove();
@@ -63,9 +72,7 @@ const GeographyQuiz = () => {
       correctMarker.remove();
       setCorrectMarker(null);
     }
-
-    // Lägg till alla svar som klickbara pins
-    addAnswerPins();
+    // Pins läggs till i useEffect när currentQuestion uppdaterats
   };
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -219,6 +226,20 @@ const GeographyQuiz = () => {
     }
   }, [gameStarted]);
 
+  // Lägg till/uppdatera pins när fråga, kategori eller karta är redo
+  useEffect(() => {
+    if (!map.current || !mapReady) return;
+
+    // Inget aktivt spel: rensa gamla pins
+    if (!currentQuestion) {
+      answerMarkers.forEach(m => m.remove());
+      setAnswerMarkers([]);
+      return;
+    }
+
+    addAnswerPins();
+  }, [currentQuestion, selectedCategory, mapReady]);
+
   const resetGame = () => {
     setScore(0);
     setQuestionsAnswered(0);
@@ -296,7 +317,7 @@ const GeographyQuiz = () => {
               <p className="text-lg font-medium">Var ligger <strong>{currentQuestion.name}</strong>?</p>
               <Badge variant="outline">{currentQuestion.category}</Badge>
             </div>
-            <Progress value={(questionsAnswered / geographyQuestions.length) * 100} className="h-2" />
+            <Progress value={(questionsAnswered / (selectedCategory === 'Alla' ? geographyQuestions.length : geographyQuestions.filter(q => q.category === selectedCategory).length)) * 100} className="h-2" />
           </div>
         )}
       </div>
