@@ -24,6 +24,7 @@ const GeographyQuiz = () => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [userMarker, setUserMarker] = useState<mapboxgl.Marker | null>(null);
   const [correctMarker, setCorrectMarker] = useState<mapboxgl.Marker | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   const getRandomQuestion = () => {
     const availableQuestions = geographyQuestions.filter(q => 
@@ -137,15 +138,21 @@ const GeographyQuiz = () => {
         zoom: 2,
       });
 
+      // Navigationskontroller
+      map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+
       map.current.on('click', handleMapClick);
       
       map.current.on('load', () => {
         console.log('Mapbox map loaded successfully');
+        setMapReady(true);
         try {
           map.current?.resize();
           const canvas = map.current?.getCanvas();
           if (canvas) canvas.style.cursor = 'crosshair';
         } catch {}
+        // Starta första frågan när kartan är redo
+        startNewQuestion();
       });
       
       map.current.on('error', (e) => {
@@ -161,14 +168,17 @@ const GeographyQuiz = () => {
     }
   };
 
+  // Startar spelet och initierar kartan via useEffect
   const startGame = () => {
     setGameStarted(true);
-    // Ge React tid att rendera map container innan vi initierar kartan
-    setTimeout(() => {
-      initializeMap();
-      setTimeout(() => startNewQuestion(), 500);
-    }, 100);
   };
+
+  // Initiera kartan när spelet startat och containern finns
+  useEffect(() => {
+    if (gameStarted && !map.current && mapContainer.current) {
+      initializeMap();
+    }
+  }, [gameStarted]);
 
   const resetGame = () => {
     setScore(0);
