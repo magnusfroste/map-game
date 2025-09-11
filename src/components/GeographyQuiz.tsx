@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { geographyQuestions, categories, GeographyQuestion } from '@/data/geographyQuestions';
 import { Progress } from '@/components/ui/progress';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGl0ZWl0IiwiYSI6ImNqenU3MjdocjBjMmszb3Fpa3hyZjNzb28ifQ.-N7x3KsTUFpWU7oVNZVWxw';
 
@@ -25,7 +25,7 @@ const GeographyQuiz = () => {
   const [userMarker, setUserMarker] = useState<mapboxgl.Marker | null>(null);
   const [correctMarker, setCorrectMarker] = useState<mapboxgl.Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [mapboxToken, setMapboxToken] = useState('');
+  const [answerMarkers, setAnswerMarkers] = useState<mapboxgl.Marker[]>([]);
 
   const getRandomQuestion = () => {
     const availableQuestions = geographyQuestions.filter(q => 
@@ -63,6 +63,9 @@ const GeographyQuiz = () => {
       correctMarker.remove();
       setCorrectMarker(null);
     }
+
+    // Lägg till alla svar som klickbara pins
+    addAnswerPins();
   };
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -76,53 +79,90 @@ const GeographyQuiz = () => {
     return R * c;
   };
 
-  const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
-    if (!currentQuestion || showAnswer || !map.current) return;
+  const addAnswerPins = () => {
+    if (!map.current || !currentQuestion) return;
 
-    const { lng, lat } = e.lngLat;
-    console.log('Map clicked at', { lat, lng, target: currentQuestion.name });
+    // Ta bort gamla pins
+    answerMarkers.forEach(marker => marker.remove());
+    setAnswerMarkers([]);
+
+    // Få relevanta frågor baserat på kategori
+    const relevantQuestions = geographyQuestions.filter(q => 
+      selectedCategory === 'Alla' || q.category === selectedCategory
+    );
+
+    // Lägg till pins för alla relevanta frågor
+    const newMarkers: mapboxgl.Marker[] = [];
+    relevantQuestions.forEach((question) => {
+      const pinElement = document.createElement('div');
+      pinElement.className = 'w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg cursor-pointer hover:bg-blue-600 transition-colors';
+      pinElement.title = 'Klicka här!';
+      
+      const marker = new mapboxgl.Marker(pinElement)
+        .setLngLat([question.lng, question.lat])
+        .addTo(map.current!);
+
+      // Lägg till klick-hanterare
+      pinElement.addEventListener('click', () => handlePinClick(question));
+      
+      newMarkers.push(marker);
+    });
+
+    setAnswerMarkers(newMarkers);
+  };
+
+  const handlePinClick = (clickedQuestion: GeographyQuestion) => {
+    if (!currentQuestion || showAnswer) return;
+
+    console.log('Pin clicked:', clickedQuestion.name, 'Target:', currentQuestion.name);
     
-    // Lägg till användarens markör
-    const newUserMarker = new mapboxgl.Marker({ color: '#3b82f6' })
-      .setLngLat([lng, lat])
-      .addTo(map.current!);
-    setUserMarker(newUserMarker);
+    // Lägg till användarens markör (blå)
+    const clickedPin = answerMarkers.find(marker => {
+      const pos = marker.getLngLat();
+      return Math.abs(pos.lng - clickedQuestion.lng) < 0.001 && Math.abs(pos.lat - clickedQuestion.lat) < 0.001;
+    });
     
-    // Beräkna avstånd
-    const distance = calculateDistance(lat, lng, currentQuestion.lat, currentQuestion.lng);
-    const toleranceInKm = currentQuestion.tolerance * 111; // Ungefär km per grad
-    console.log('Distance & tolerance (km):', { distance: Math.round(distance), toleranceInKm });
+    if (clickedPin) {
+      const pinElement = clickedPin.getElement();
+      pinElement.className = 'w-5 h-5 bg-blue-600 rounded-full border-2 border-white shadow-lg scale-125';
+      setUserMarker(clickedPin);
+    }
     
-    // Visa rätt svar
-    const newCorrectMarker = new mapboxgl.Marker({ color: '#16a34a' })
-      .setLngLat([currentQuestion.lng, currentQuestion.lat])
-      .addTo(map.current!);
-    setCorrectMarker(newCorrectMarker);
+    // Visa rätt svar (grön)
+    const correctPin = answerMarkers.find(marker => {
+      const pos = marker.getLngLat();
+      return Math.abs(pos.lng - currentQuestion.lng) < 0.001 && Math.abs(pos.lat - currentQuestion.lat) < 0.001;
+    });
+    
+    if (correctPin) {
+      const pinElement = correctPin.getElement();
+      pinElement.className = 'w-5 h-5 bg-green-500 rounded-full border-2 border-white shadow-lg scale-125';
+      setCorrectMarker(correctPin);
+    }
     
     setShowAnswer(true);
     setQuestionsAnswered(prev => prev + 1);
     setUsedQuestions(prev => new Set([...prev, currentQuestion.id]));
     
-    if (distance <= toleranceInKm) {
+    // Beräkna avstånd
+    const distance = calculateDistance(clickedQuestion.lat, clickedQuestion.lng, currentQuestion.lat, currentQuestion.lng);
+    
+    if (clickedQuestion.id === currentQuestion.id) {
       setScore(prev => prev + 1);
-      setFeedback(`Rätt! ${currentQuestion.name} ligger här. Avstånd: ${Math.round(distance)} km`);
+      setFeedback(`Rätt! ${currentQuestion.name} ligger här.`);
       setFeedbackType('success');
-      try {
-        toast({
-          title: 'Rätt svar!',
-          description: `${currentQuestion.name} — ${Math.round(distance)} km ifrån. Bra jobbat!`,
-        });
-      } catch {}
+      toast({
+        title: 'Rätt svar!',
+        description: `${currentQuestion.name} — Bra jobbat!`,
+      });
     } else {
-      setFeedback(`Fel. ${currentQuestion.name} ligger här (grön markör). Ditt svar var ${Math.round(distance)} km bort.`);
+      setFeedback(`Fel. Du klickade på ${clickedQuestion.name}, men rätt svar är ${currentQuestion.name} (grön pin).`);
       setFeedbackType('warning');
-      try {
-        toast({
-          title: 'Inte riktigt',
-          description: `${currentQuestion.name} låg ${Math.round(distance)} km från din markering.`,
-          variant: 'destructive',
-        });
-      } catch {}
+      toast({
+        title: 'Inte riktigt',
+        description: `Du valde ${clickedQuestion.name}, men rätt svar var ${currentQuestion.name}.`,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -130,7 +170,7 @@ const GeographyQuiz = () => {
     if (!mapContainer.current) return;
 
     try {
-      mapboxgl.accessToken = (mapboxToken?.trim() || MAPBOX_TOKEN);
+      mapboxgl.accessToken = MAPBOX_TOKEN;
       
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -142,15 +182,13 @@ const GeographyQuiz = () => {
       // Navigationskontroller
       map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
 
-      map.current.on('click', handleMapClick);
-      
       map.current.on('load', () => {
         console.log('Mapbox map loaded successfully');
         setMapReady(true);
         try {
           map.current?.resize();
           const canvas = map.current?.getCanvas();
-          if (canvas) canvas.style.cursor = 'crosshair';
+          if (canvas) canvas.style.cursor = 'default';
         } catch {}
         // Starta första frågan när kartan är redo
         startNewQuestion();
@@ -190,6 +228,8 @@ const GeographyQuiz = () => {
     setShowAnswer(false);
     if (userMarker) userMarker.remove();
     if (correctMarker) correctMarker.remove();
+    answerMarkers.forEach(marker => marker.remove());
+    setAnswerMarkers([]);
     startNewQuestion();
   };
 
@@ -213,18 +253,6 @@ const GeographyQuiz = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="pt-1">
-              <label className="block text-sm font-medium mb-2">Mapbox public token</label>
-              <input
-                type="text"
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                placeholder="pk.eyJ..."
-                className="w-full px-3 py-2 border rounded-md"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Hämta din token på mapbox.com → Tokens.</p>
             </div>
             
             {feedback && feedbackType === 'error' && (
@@ -320,7 +348,7 @@ const GeographyQuiz = () => {
       </div>
       
       <div className="bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
-        Klicka på kartan för att markera var du tror platsen ligger
+        Klicka på de blå punkterna för att välja var du tror platsen ligger
       </div>
     </div>
   );
