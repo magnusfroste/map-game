@@ -1,16 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { geographyQuestions, categories, GeographyQuestion } from '@/data/geographyQuestions';
+import { geographyQuestions as defaultQuestions, categories as defaultCategories, GeographyQuestion } from '@/data/geographyQuestions';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGl0ZWl0IiwiYSI6ImNqenU3MjdocjBjMmszb3Fpa3hyZjNzb28ifQ.-N7x3KsTUFpWU7oVNZVWxw';
 
-const GeographyQuiz = () => {
+interface GeographyQuizProps {
+  customQuestions?: GeographyQuestion[] | null;
+}
+
+const GeographyQuiz = ({ customQuestions }: GeographyQuizProps) => {
+  const navigate = useNavigate();
+  
+  // Use custom questions if provided, otherwise default
+  const geographyQuestions = useMemo(() => 
+    customQuestions && customQuestions.length > 0 ? customQuestions : defaultQuestions,
+    [customQuestions]
+  );
+  
+  const categories = useMemo(() => 
+    [...new Set(geographyQuestions.map(q => q.category))],
+    [geographyQuestions]
+  );
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<GeographyQuestion | null>(null);
@@ -259,7 +277,20 @@ const GeographyQuiz = () => {
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center text-2xl">Karttest - Nord- och Sydamerika</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Tillbaka
+              </Button>
+            </div>
+            <CardTitle className="text-center text-2xl">
+              {customQuestions ? 'AI-genererat karttest' : 'Karttest - Nord- och Sydamerika'}
+            </CardTitle>
+            {customQuestions && (
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                {geographyQuestions.length} frågor från ditt dokument
+              </p>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -267,7 +298,7 @@ const GeographyQuiz = () => {
               <select 
                 value={selectedCategory} 
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full px-3 py-2 border rounded-md bg-background"
               >
                 <option value="Alla">Alla kategorier</option>
                 {categories.map(category => (
