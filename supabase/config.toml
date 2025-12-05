@@ -1,0 +1,4 @@
+project_id = "jjtslbfffetspltfsgvl"
+
+[functions.analyze-geography]
+verify_jwt = false
