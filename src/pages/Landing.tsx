@@ -133,8 +133,19 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-2">
           <p>Kartkul – Lär dig geografi på ett interaktivt sätt</p>
+          <p>
+            Skapad av Magnus Froste · {' '}
+            <a 
+              href="https://github.com/magnusfroste" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Open Source på GitHub
+            </a>
+          </p>
         </div>
       </footer>
     </div>
