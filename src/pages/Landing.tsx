@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Target, BarChart3, Brain, ArrowRight, Github } from 'lucide-react';
+import { MapPin, Target, BarChart3, Brain, ArrowRight, Github, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroSection from '@/components/HeroSection';
 import FeatureCard from '@/components/FeatureCard';
 import DocumentUpload from '@/components/DocumentUpload';
 import type { GeographyQuestion } from '@/data/geographyQuestions';
+import { Continent, continentLabels } from '@/data/allQuestions';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -15,16 +16,20 @@ const Landing = () => {
     setGeneratedQuestions(questions);
   };
 
-  const startQuiz = (useGenerated: boolean) => {
+  const startQuiz = (useGenerated: boolean, continent?: Continent) => {
     if (useGenerated && generatedQuestions) {
-      // Store questions in sessionStorage for the quiz page
       sessionStorage.setItem('customQuestions', JSON.stringify(generatedQuestions));
       navigate('/quiz?custom=true');
+    } else if (continent) {
+      sessionStorage.removeItem('customQuestions');
+      navigate(`/quiz?continent=${continent}`);
     } else {
       sessionStorage.removeItem('customQuestions');
       navigate('/quiz');
     }
   };
+
+  const continents: Continent[] = ['amerika', 'europa', 'afrika', 'asien', 'alla'];
 
   const features = [
     {
@@ -71,21 +76,27 @@ const Landing = () => {
       {/* Quick Start Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Redo att börja?
+              Välj världsdel – Åk 7-9
             </h2>
             <p className="text-muted-foreground mb-8">
-              Starta direkt med våra färdiga frågor om Amerika eller ladda upp ditt eget material.
+              Testa dina kunskaper i geografi enligt svensk läroplan för högstadiet.
             </p>
-            <Button 
-              size="lg" 
-              onClick={() => startQuiz(false)}
-              className="group"
-            >
-              Starta testet
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {continents.map((continent) => (
+                <Button 
+                  key={continent}
+                  size="lg" 
+                  variant={continent === 'alla' ? 'default' : 'outline'}
+                  onClick={() => startQuiz(false, continent)}
+                  className="group flex flex-col h-auto py-4"
+                >
+                  <Globe className="h-6 w-6 mb-2" />
+                  <span>{continentLabels[continent]}</span>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </section>

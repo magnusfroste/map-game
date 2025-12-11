@@ -8,7 +8,7 @@ export interface GeographyQuestion {
   tolerance: number; // Tolerans i grader för att svaret ska räknas som rätt
 }
 
-export const geographyQuestions: GeographyQuestion[] = [
+export const americaQuestions: GeographyQuestion[] = [
   // Land + Huvudstäder
   { id: 'usa', name: 'USA', category: 'Land + Huvudstad', lat: 39.8283, lng: -98.5795, tolerance: 8 },
   { id: 'canada', name: 'Kanada', category: 'Land + Huvudstad', lat: 56.1304, lng: -106.3468, tolerance: 8 },
@@ -66,4 +66,5 @@ export const geographyQuestions: GeographyQuestion[] = [
   { id: 'mexikanska_golfen', name: 'Mexikanska golfen', category: 'Hav', lat: 25.0000, lng: -90.0000, tolerance: 6 }
 ];
 
+export const geographyQuestions = americaQuestions; // Keep for backward compatibility
 export const categories = Array.from(new Set(geographyQuestions.map(q => q.category)));

@@ -5,7 +5,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { geographyQuestions as defaultQuestions, categories as defaultCategories, GeographyQuestion } from '@/data/geographyQuestions';
+import { GeographyQuestion } from '@/data/geographyQuestions';
+import { Continent, continentLabels } from '@/data/allQuestions';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
@@ -14,14 +15,16 @@ const MAPBOX_TOKEN = 'pk.eyJ1IjoibGl0ZWl0IiwiYSI6ImNqenU3MjdocjBjMmszb3Fpa3hyZjN
 
 interface GeographyQuizProps {
   customQuestions?: GeographyQuestion[] | null;
+  continent?: Continent;
+  isCustom?: boolean;
 }
 
-const GeographyQuiz = ({ customQuestions }: GeographyQuizProps) => {
+const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = false }: GeographyQuizProps) => {
   const navigate = useNavigate();
   
-  // Use custom questions if provided, otherwise default
+  // Use provided questions
   const geographyQuestions = useMemo(() => 
-    customQuestions && customQuestions.length > 0 ? customQuestions : defaultQuestions,
+    customQuestions && customQuestions.length > 0 ? customQuestions : [],
     [customQuestions]
   );
   
@@ -197,11 +200,23 @@ const GeographyQuiz = ({ customQuestions }: GeographyQuizProps) => {
     try {
       mapboxgl.accessToken = MAPBOX_TOKEN;
       
+      // Set initial view based on continent
+      const mapViews: Record<Continent | 'custom', { center: [number, number]; zoom: number }> = {
+        amerika: { center: [-60, 10], zoom: 2 },
+        europa: { center: [15, 54], zoom: 3 },
+        afrika: { center: [20, 5], zoom: 2.5 },
+        asien: { center: [90, 35], zoom: 2 },
+        alla: { center: [20, 20], zoom: 1.5 },
+        custom: { center: [0, 20], zoom: 1.5 },
+      };
+      
+      const view = isCustom ? mapViews.custom : mapViews[continent];
+      
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        center: [-60, 20], // Centrerat över Amerika
-        zoom: 2,
+        center: view.center,
+        zoom: view.zoom,
       });
 
       // Navigationskontroller
@@ -284,11 +299,18 @@ const GeographyQuiz = ({ customQuestions }: GeographyQuizProps) => {
               </Button>
             </div>
             <CardTitle className="text-center text-2xl">
-              {customQuestions ? 'AI-genererat karttest' : 'Karttest - Nord- och Sydamerika'}
+              {isCustom 
+                ? 'AI-genererat karttest' 
+                : `Karttest – ${continentLabels[continent]}`}
             </CardTitle>
-            {customQuestions && (
+            {isCustom && (
               <p className="text-center text-sm text-muted-foreground mt-2">
                 {geographyQuestions.length} frågor från ditt dokument
+              </p>
+            )}
+            {!isCustom && (
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                {geographyQuestions.length} platser att lära sig
               </p>
             )}
           </CardHeader>
