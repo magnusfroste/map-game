@@ -9,7 +9,8 @@ import { GeographyQuestion } from '@/data/geographyQuestions';
 import { Continent, continentLabels } from '@/data/allQuestions';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RotateCcw, RefreshCw } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoibGl0ZWl0IiwiYSI6ImNqenU3MjdocjBjMmszb3Fpa3hyZjNzb28ifQ.-N7x3KsTUFpWU7oVNZVWxw';
 
@@ -47,9 +48,18 @@ const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = fals
   const [correctMarker, setCorrectMarker] = useState<mapboxgl.Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [answerMarkers, setAnswerMarkers] = useState<mapboxgl.Marker[]>([]);
+  const [wrongAnswers, setWrongAnswers] = useState<GeographyQuestion[]>([]);
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [practiceQuestions, setPracticeQuestions] = useState<GeographyQuestion[]>([]);
+
+  // Get the active question set (practice mode uses wrong answers)
+  const activeQuestions = useMemo(() => 
+    practiceMode && practiceQuestions.length > 0 ? practiceQuestions : geographyQuestions,
+    [practiceMode, practiceQuestions, geographyQuestions]
+  );
 
   const getRandomQuestion = () => {
-    const availableQuestions = geographyQuestions.filter(q => 
+    const availableQuestions = activeQuestions.filter(q => 
       !usedQuestions.has(q.id) && 
       (selectedCategory === 'Alla' || q.category === selectedCategory)
     );
@@ -184,6 +194,13 @@ const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = fals
         description: `${currentQuestion.name} — Bra jobbat!`,
       });
     } else {
+      // Track wrong answer
+      setWrongAnswers(prev => {
+        if (!prev.find(q => q.id === currentQuestion.id)) {
+          return [...prev, currentQuestion];
+        }
+        return prev;
+      });
       setFeedback(`Fel. Du klickade på ${clickedQuestion.name}, men rätt svar är ${currentQuestion.name} (grön pin).`);
       setFeedbackType('warning');
       toast({
@@ -273,7 +290,30 @@ const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = fals
     addAnswerPins();
   }, [currentQuestion, selectedCategory, mapReady]);
 
-  const resetGame = () => {
+  const resetGame = (keepWrongAnswers = false) => {
+    setScore(0);
+    setQuestionsAnswered(0);
+    setUsedQuestions(new Set());
+    setFeedback('');
+    setFeedbackType('');
+    setShowAnswer(false);
+    if (!keepWrongAnswers) {
+      setWrongAnswers([]);
+      setPracticeMode(false);
+      setPracticeQuestions([]);
+    }
+    if (userMarker) userMarker.remove();
+    if (correctMarker) correctMarker.remove();
+    answerMarkers.forEach(marker => marker.remove());
+    setAnswerMarkers([]);
+    startNewQuestion();
+  };
+
+  const startPracticeMode = () => {
+    if (wrongAnswers.length === 0) return;
+    setPracticeQuestions(wrongAnswers);
+    setPracticeMode(true);
+    setWrongAnswers([]);
     setScore(0);
     setQuestionsAnswered(0);
     setUsedQuestions(new Set());
@@ -284,7 +324,10 @@ const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = fals
     if (correctMarker) correctMarker.remove();
     answerMarkers.forEach(marker => marker.remove());
     setAnswerMarkers([]);
-    startNewQuestion();
+    // Start first question after state updates
+    setTimeout(() => {
+      startNewQuestion();
+    }, 0);
   };
 
   if (!gameStarted) {
@@ -354,15 +397,19 @@ const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = fals
               <ArrowLeft className="h-4 w-4 mr-1" />
               Tillbaka
             </Button>
-            <h1 className="text-xl font-bold">Karttest</h1>
-            <Badge variant="secondary">{selectedCategory}</Badge>
+            <h1 className="text-xl font-bold">
+              {practiceMode ? 'Övningsläge' : 'Karttest'}
+            </h1>
+            <Badge variant={practiceMode ? 'destructive' : 'secondary'}>
+              {practiceMode ? `Övar ${practiceQuestions.length} platser` : selectedCategory}
+            </Badge>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="text-sm">
               Poäng: <span className="font-bold text-primary">{score}/{questionsAnswered}</span>
             </div>
-            <Button variant="outline" size="sm" onClick={resetGame}>
+            <Button variant="outline" size="sm" onClick={() => resetGame(false)}>
               Börja om
             </Button>
           </div>
@@ -408,17 +455,61 @@ const GeographyQuiz = ({ customQuestions, continent = 'amerika', isCustom = fals
         )}
         
         {!currentQuestion && questionsAnswered > 0 && (
-          <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-            <Card>
-              <CardContent className="text-center p-6">
-                <h2 className="text-2xl font-bold mb-2">Spelet klart!</h2>
-                <p className="text-lg mb-4">
+          <div className="absolute inset-0 bg-background/80 flex items-center justify-center p-4 overflow-auto">
+            <Card className="w-full max-w-lg">
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-2 text-center">
+                  {practiceMode ? 'Övning klar!' : 'Spelet klart!'}
+                </h2>
+                <p className="text-lg mb-2 text-center">
                   Du fick <span className="font-bold text-primary">{score}</span> av {questionsAnswered} rätt
                 </p>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-4 text-center">
                   {Math.round((score / questionsAnswered) * 100)}% rätt
                 </p>
-                <Button onClick={resetGame}>Spela igen</Button>
+                
+                {/* Wrong answers summary */}
+                {wrongAnswers.length > 0 && (
+                  <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <h3 className="font-semibold text-destructive mb-2 flex items-center gap-2">
+                      <RotateCcw className="h-4 w-4" />
+                      Platser att öva på ({wrongAnswers.length} st)
+                    </h3>
+                    <ScrollArea className="h-32">
+                      <ul className="space-y-1 text-sm">
+                        {wrongAnswers.map((q) => (
+                          <li key={q.id} className="flex items-center justify-between py-1 border-b border-border/50 last:border-0">
+                            <span className="font-medium">{q.name}</span>
+                            <Badge variant="outline" className="text-xs">{q.category}</Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    </ScrollArea>
+                    <Button 
+                      onClick={startPracticeMode} 
+                      className="w-full mt-3"
+                      variant="destructive"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Öva dessa igen
+                    </Button>
+                  </div>
+                )}
+
+                {wrongAnswers.length === 0 && !practiceMode && (
+                  <div className="mb-4 p-4 bg-success/10 border border-success/20 rounded-lg text-center">
+                    <p className="text-success font-medium">🎉 Perfekt! Inga fel den här rundan!</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button onClick={() => resetGame(false)} className="flex-1" variant="outline">
+                    Börja om från början
+                  </Button>
+                  <Button onClick={() => navigate('/')} variant="secondary">
+                    Tillbaka
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
