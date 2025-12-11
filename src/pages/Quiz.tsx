@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import GeographyQuiz from '@/components/GeographyQuiz';
 import type { GeographyQuestion } from '@/data/geographyQuestions';
+import { Continent, getQuestionsByContinent } from '@/data/allQuestions';
 
 const Quiz = () => {
   const [searchParams] = useSearchParams();
   const [customQuestions, setCustomQuestions] = useState<GeographyQuestion[] | null>(null);
   const isCustom = searchParams.get('custom') === 'true';
+  const continent = (searchParams.get('continent') as Continent) || 'amerika';
 
   useEffect(() => {
     if (isCustom) {
@@ -22,7 +24,12 @@ const Quiz = () => {
     }
   }, [isCustom]);
 
-  return <GeographyQuiz customQuestions={customQuestions} />;
+  // Get questions based on continent or custom
+  const questions = isCustom && customQuestions 
+    ? customQuestions 
+    : getQuestionsByContinent(continent);
+
+  return <GeographyQuiz customQuestions={questions} continent={continent} isCustom={isCustom} />;
 };
 
 export default Quiz;
