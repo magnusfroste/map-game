@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Target, BarChart3, Brain, ArrowRight } from 'lucide-react';
+import { MapPin, Target, BarChart3, Brain, ArrowRight, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroSection from '@/components/HeroSection';
 import FeatureCard from '@/components/FeatureCard';
@@ -141,8 +141,9 @@ const Landing = () => {
               href="https://github.com/magnusfroste" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="inline-flex items-center gap-1 text-primary hover:underline"
             >
+              <Github className="h-4 w-4" />
               Open Source på GitHub
             </a>
           </p>
