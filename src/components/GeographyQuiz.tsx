@@ -328,6 +328,10 @@ const GeographyQuiz = ({ customQuestions }: GeographyQuizProps) => {
       <div className="bg-card border-b px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Tillbaka
+            </Button>
             <h1 className="text-xl font-bold">Karttest</h1>
             <Badge variant="secondary">{selectedCategory}</Badge>
           </div>
