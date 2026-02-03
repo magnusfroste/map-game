@@ -1,73 +1,65 @@
-# Welcome to your Lovable project
+# Map Game 🗺️
 
-## Project info
+An interactive geography quiz game where you explore the world through maps. Click on the right locations, track your progress, and learn about different continents!
 
-**URL**: https://lovable.dev/projects/f5c8fa1c-3c26-4304-8d3c-9d223ce9249a
+**Published on [skolappar.com](https://www.skolappar.com) - Democratizing learning apps, built by vibe-coding parents who love helping their kids learn!**
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Interactive Maps**: Explore detailed maps powered by Mapbox
+- **Click to Answer**: Click on the correct location on the map
+- **Distance Feedback**: See how close you were to the target
+- **Continent Selection**: Focus on specific regions or play worldwide
+- **Progress Tracking**: Follow your improvement over time
+- **Custom Questions**: Upload documents to generate custom quizzes
+- **Responsive Design**: Works on desktop and mobile
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f5c8fa1c-3c26-4304-8d3c-9d223ce9249a) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v18 or higher)
+- npm or yarn
+- Mapbox API key
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Run Locally
 
-Follow these steps:
+```bash
+# Set your Mapbox API key in .env.local
+VITE_MAPBOX_TOKEN=your_token_here
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Build for Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+```
 
-**Use GitHub Codespaces**
+## How to Play
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Choose a continent or play worldwide
+2. Read the geography question
+3. Click on the map where you think the answer is
+4. See how close you were to the target
+5. Track your progress and improve over time
 
-## What technologies are used for this project?
+## Tech Stack
 
-This project is built with:
+- **React 19** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **Mapbox** - Interactive maps
+- **shadcn/ui** - Components
+- **Tailwind CSS** - Styling
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## License
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/f5c8fa1c-3c26-4304-8d3c-9d223ce9249a) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT
