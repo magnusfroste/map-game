@@ -1,0 +1,11 @@
+# Karttest – Geografi Nord- och Sydamerika
+
+> Interaktivt karttest där barn och elever lär sig geografi genom att klicka ut länder, städer, floder och andra platser på kartan.
+
+Karttest är en gratis skolapp för geografiträning. Eleven väljer område och klickar på rätt plats på en interaktiv karta, får se hur nära svaret var och kan följa sina framsteg. Passar för mellanstadiet och uppåt, hemma eller i klassrummet. Appen är publicerad på Skolappar.com, en community där föräldrar delar pedagogiska appar.
+
+## Viktiga länkar
+
+- [Startsida](https://mapgame.skolappar.com/)
+- [Starta quizet](https://mapgame.skolappar.com/quiz)
+- [Skolappar.com – fler pedagogiska appar](https://www.skolappar.com/)
