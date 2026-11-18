@@ -1,4 +1,5 @@
 import type { GeographyQuestion } from '@/data/geographyQuestions';
+import { lookupPlace } from '@/data/gazetteer';
 
 export interface Place extends GeographyQuestion {}
 
@@ -6,13 +7,16 @@ const SESSION_KEY = 'karttest:egna-platser';
 
 /** Exempel som går att ladda ner som mall. */
 export const SAMPLE = `# Egna platser – en plats per rad
-# format: namn; latitud; longitud; kategori (kategori är frivillig)
-Norge; 61.5; 8.5; Länder
-Oslo; 59.91; 10.75; Huvudstäder
-Rio Grande; 29.0; -104.0; Floder
-Kilimanjaro; -3.07; 37.35; Berg
+# Enklast: bara namnet, så slås koordinaterna upp lokalt
+Himalaya
+Indiska oceanen
+Ganges
 
-# Andra format som också funkar:
+# Eller med egna koordinater: namn; latitud; longitud; kategori
+Norge; 61.5; 8.5; Länder
+Rio Grande; 29.0; -104.0; Floder
+
+# Fler format som funkar:
 #   Paris, 48.85, 2.35
 #   Paris 48.85 2.35
 #   Paris | 48.85 | 2.35 | Städer
@@ -37,6 +41,7 @@ const toNum = (s: string): number | null => {
 export function parsePlaces(text: string, fallbackCategory = 'Egna platser') {
   const places: Place[] = [];
   const problems: string[] = [];
+  const missing: string[] = [];
 
   text.split(/\r?\n/).forEach((rawLine, i) => {
     const line = rawLine.trim();
@@ -61,8 +66,14 @@ export function parsePlaces(text: string, fallbackCategory = 'Egna platser') {
     }
 
     if (fields.length < 3) {
-      problems.push(`rad ${i + 1}: hittar inte namn + två koordinater`);
-      return;
+      // Bara ett namn på raden: slå upp det lokalt i platsregistret.
+      const found = lookupPlace(line);
+      if (found) {
+        fields = [found.name, String(found.lat), String(found.lng), found.category];
+      } else {
+        missing.push(line);
+        return;
+      }
     }
 
     const name = fields[0];
@@ -95,7 +106,7 @@ export function parsePlaces(text: string, fallbackCategory = 'Egna platser') {
     });
   });
 
-  return { places, problems };
+  return { places, problems, missing };
 }
 
 export function saveOwnPlaces(places: Place[], label: string) {

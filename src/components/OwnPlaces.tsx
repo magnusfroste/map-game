@@ -12,8 +12,50 @@ const OwnPlaces = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState('');
   const [label, setLabel] = useState('Egna platser');
-  const [result, setResult] = useState<{ places: Place[]; problems: string[] } | null>(null);
+  const [result, setResult] = useState<{ places: Place[]; problems: string[]; missing: string[] } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string>('');
   const saved = loadOwnPlaces();
+
+  /** Slår upp namn som saknas i det lokala registret via OpenStreetMap. */
+  const lookupOnline = async () => {
+    const names = result?.missing ?? [];
+    if (names.length === 0) return;
+    setNote('Slår upp ' + names.length + ' namn …');
+    const found: Place[] = [];
+    const still: string[] = [];
+    for (let i = 0; i < names.length; i += 1) {
+      const n = names[i];
+      setBusy(n);
+      try {
+        const url =
+          'https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=sv&q=' +
+          encodeURIComponent(n);
+        const r = await fetch(url, { headers: { Accept: 'application/json' } });
+        const list = (await r.json()) as { lat: string; lon: string; display_name: string }[];
+        if (list.length > 0) {
+          found.push({
+            id: 'egen-osm-' + i + '-' + n.toLowerCase().replace(/[^a-z0-9åäö]+/gi, '-'),
+            name: n,
+            category: 'Uppslag',
+            lat: Number(list[0].lat),
+            lng: Number(list[0].lon),
+            tolerance: 8,
+          });
+        } else {
+          still.push(n);
+        }
+      } catch {
+        still.push(n);
+      }
+      await new Promise((res) => setTimeout(res, 1100));
+    }
+    setBusy(null);
+    setResult((prev) =>
+      prev ? { places: [...prev.places, ...found], problems: prev.problems, missing: still } : prev,
+    );
+    setNote(found.length + ' hittade, ' + still.length + ' kvar att fylla i själv');
+  };
 
   const readFile = async (file: File) => {
     const raw = await file.text();
@@ -44,7 +86,8 @@ const OwnPlaces = () => {
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Ladda upp en textfil med platser (länder, städer, floder …) eller klistra in listan.
-          Filen tolkas direkt i webbläsaren – inget skickas någonstans och du behöver inget konto.
+          Det räcker med namnen – koordinaterna slås upp lokalt i ett register med flera hundra
+          platser, helt utan AI och utan nätverk. Filen stannar i webbläsaren.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -94,12 +137,15 @@ const OwnPlaces = () => {
 
         {result && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant={result.places.length > 0 ? 'default' : 'destructive'}>
                 {result.places.length} platser
               </Badge>
+              {result.missing.length > 0 && (
+                <Badge variant="outline">{result.missing.length} namn saknas i registret</Badge>
+              )}
               {result.problems.length > 0 && (
-                <Badge variant="outline">{result.problems.length} rader hoppades över</Badge>
+                <Badge variant="outline">{result.problems.length} rader med fel</Badge>
               )}
             </div>
 
@@ -124,6 +170,21 @@ const OwnPlaces = () => {
                   <li key={p}>{p}</li>
                 ))}
               </ul>
+            )}
+
+            {result.missing.length > 0 && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+                <p className="text-sm font-medium">Namn som inte finns i registret:</p>
+                <p className="mt-1 text-sm text-muted-foreground">{result.missing.join(', ')}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Skriv koordinater själv efter namnet (t.ex. <code>Himalaya; 28.0; 86.9</code>), eller
+                  slå upp dem hos OpenStreetMap – då skickas bara namnen dit.
+                </p>
+                <Button size="sm" variant="outline" className="mt-2" onClick={lookupOnline} disabled={!!busy}>
+                  {busy ? 'Slår upp ' + busy + ' …' : 'Slå upp via OpenStreetMap'}
+                </Button>
+                {note && <p className="mt-2 text-xs text-muted-foreground">{note}</p>}
+              </div>
             )}
 
             <Button onClick={play} className="w-full" size="lg" disabled={result.places.length === 0}>
