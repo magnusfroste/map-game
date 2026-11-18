@@ -1,165 +1,46 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Target, BarChart3, Brain, ArrowRight, Github, Globe } from 'lucide-react';
+import { MapPin, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import HeroSection from '@/components/HeroSection';
-import FeatureCard from '@/components/FeatureCard';
-import DocumentUpload from '@/components/DocumentUpload';
-import type { GeographyQuestion } from '@/data/geographyQuestions';
 import { Continent, continentLabels } from '@/data/allQuestions';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [generatedQuestions, setGeneratedQuestions] = useState<GeographyQuestion[] | null>(null);
-
-  const handleQuestionsGenerated = (questions: GeographyQuestion[]) => {
-    setGeneratedQuestions(questions);
-  };
-
-  const startQuiz = (useGenerated: boolean, continent?: Continent) => {
-    if (useGenerated && generatedQuestions) {
-      sessionStorage.setItem('customQuestions', JSON.stringify(generatedQuestions));
-      navigate('/quiz?custom=true');
-    } else if (continent) {
-      sessionStorage.removeItem('customQuestions');
-      navigate(`/quiz?continent=${continent}`);
-    } else {
-      sessionStorage.removeItem('customQuestions');
-      navigate('/quiz');
-    }
-  };
-
   const continents: Continent[] = ['amerika', 'europa', 'afrika', 'asien', 'alla'];
-
-  const features = [
-    {
-      icon: <MapPin className="h-6 w-6" />,
-      title: 'Interaktiva kartor',
-      description: 'Utforska världen med detaljerade kartor från Mapbox',
-    },
-    {
-      icon: <Target className="h-6 w-6" />,
-      title: 'Klicka rätt',
-      description: 'Klicka på rätt plats och se hur nära du kommer',
-    },
-    {
-      icon: <BarChart3 className="h-6 w-6" />,
-      title: 'Följ din progress',
-      description: 'Se hur bra du blir över tid med detaljerad statistik',
-    },
-    {
-      icon: <Brain className="h-6 w-6" />,
-      title: 'AI-genererade frågor',
-      description: 'Ladda upp ditt eget material och få anpassade frågor',
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <HeroSection />
+      <header className="mx-auto max-w-3xl px-5 pt-12 pb-2 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          <MapPin className="h-3.5 w-3.5" /> Geografi
+        </span>
+        <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Karttest</h1>
+        <p className="mx-auto mt-3 max-w-xl text-lg text-muted-foreground">
+          Träna på länder, huvudstäder, floder och berg – klicka på kartan där du tror
+          platsen ligger. Fyra världsdelar, över hundra platser, ingen inloggning.
+        </p>
+        <Button size="lg" className="mt-6" onClick={() => navigate('/quiz')}>
+          Starta karttest
+        </Button>
+      </header>
 
-      {/* Features Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-12">
-            Så fungerar det
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quick Start Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Välj världsdel – Åk 7-9
-            </h2>
-            <p className="text-muted-foreground mb-8">
-              Testa dina kunskaper i geografi enligt svensk läroplan för högstadiet.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {continents.map((continent) => (
-                <Button 
-                  key={continent}
-                  size="lg" 
-                  variant={continent === 'alla' ? 'default' : 'outline'}
-                  onClick={() => startQuiz(false, continent)}
-                  className="group flex flex-col h-auto py-4"
-                >
-                  <Globe className="h-6 w-6 mb-2" />
-                  <span>{continentLabels[continent]}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Upload Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Skapa egna frågor med AI
-            </h2>
-            <p className="text-muted-foreground">
-              Ladda upp en textfil med geografiskt innehåll så skapar vår AI 
-              anpassade frågor baserat på ditt material.
-            </p>
-          </div>
-
-          <DocumentUpload onQuestionsGenerated={handleQuestionsGenerated} />
-
-          {generatedQuestions && generatedQuestions.length > 0 && (
-            <div className="mt-8 text-center">
-              <div className="inline-flex flex-col items-center gap-4 p-6 rounded-2xl bg-success/10 border border-success/30">
-                <div className="flex items-center gap-2 text-success">
-                  <Target className="h-5 w-5" />
-                  <span className="font-semibold">
-                    {generatedQuestions.length} frågor genererade!
-                  </span>
-                </div>
-                <div className="text-sm text-muted-foreground max-w-md">
-                  Kategorier: {[...new Set(generatedQuestions.map(q => q.category))].join(', ')}
-                </div>
-                <Button 
-                  size="lg" 
-                  onClick={() => startQuiz(true)}
-                  className="bg-success hover:bg-success/90"
-                >
-                  Starta med AI-frågor
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-2">
-          <p>Kartkul – Lär dig geografi på ett interaktivt sätt</p>
-          <p>
-            Skapad av Magnus Froste · {' '}
-            <a 
-              href="https://github.com/magnusfroste" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline"
+      <main className="mx-auto max-w-3xl px-5 py-10">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Välj världsdel
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {continents.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => navigate('/quiz?continent=' + c)}
+              className="rounded-xl border bg-card px-4 py-5 text-left font-semibold shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
             >
-              <Github className="h-4 w-4" />
-              Open Source på GitHub
-            </a>
-          </p>
+              <Globe className="mb-2 h-5 w-5 text-primary" />
+              {continentLabels[c]}
+            </button>
+          ))}
         </div>
-      </footer>
+      </main>
     </div>
   );
 };

@@ -1,7 +1,9 @@
-import GeographyQuiz from '@/components/GeographyQuiz';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  return <GeographyQuiz />;
+  const navigate = useNavigate();
+  navigate('/quiz');
+  return null;
 };
 
 export default Index;
