@@ -21,11 +21,14 @@ interface Props {
   reveal?: boolean;
   view: string;
   onPick: (q: GeographyQuestion) => void;
+  /** Studera-läge: visa namn vid varje plats. */
+  labels?: boolean;
+  selectedId?: string | null;
 }
 
 const PAD = 18;
 
-const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick }: Props) => {
+const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, labels, selectedId }: Props) => {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 560 });
   const [zoom, setZoom] = useState(1);
@@ -66,6 +69,45 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick }: Pro
 
   const pinR = 7 / zoom;
 
+  // Etiketter utan överlapp: prova över, under, höger, vänster och hoppa över
+  // den som inte får plats. Vald plats prioriteras och ritas först.
+  const labelLayout = useMemo(() => {
+    if (!labels) return [] as { q: GeographyQuestion; cx: number; cy: number; size: number }[];
+    const pts = questions
+      .map((q) => {
+        const p = project([q.lng, q.lat]);
+        return p ? { q, x: p[0], y: p[1] } : null;
+      })
+      .filter((v): v is { q: GeographyQuestion; x: number; y: number } => v !== null);
+
+    pts.sort((a, b) => Number(b.q.id === selectedId) - Number(a.q.id === selectedId));
+
+    const taken: [number, number, number, number][] = [];
+    const out: { q: GeographyQuestion; cx: number; cy: number; size: number }[] = [];
+
+    for (const it of pts) {
+      const active = it.q.id === selectedId;
+      const fs = active ? 14 : 11;
+      const w = Math.min(170, it.q.name.length * fs * 0.55) + 6;
+      const h = fs + 6;
+      const cands: [number, number][] = [
+        [it.x - w / 2, it.y - pinR - 6 - h],
+        [it.x - w / 2, it.y + pinR + 4],
+        [it.x + pinR + 5, it.y - h / 2],
+        [it.x - w - pinR - 5, it.y - h / 2],
+      ];
+      const free = ([x, y]: [number, number]) =>
+        x > 2 && y > 2 && x + w < size.w - 2 && y + h < size.h - 2 &&
+        !taken.some(([tx, ty, tw, th]) => !(x + w < tx || x > tx + tw || y + h < ty || y > ty + th));
+
+      const spot = cands.find(free) ?? (active ? cands[0] : undefined);
+      if (!spot) continue;
+      taken.push([spot[0], spot[1], w, h]);
+      out.push({ q: it.q, cx: spot[0] + w / 2, cy: spot[1] + h / 2, size: fs });
+    }
+    return out;
+  }, [labels, questions, project, pinR, size.w, size.h, selectedId]);
+
   return (
     <div ref={box} className="absolute inset-0 overflow-hidden bg-[#dfeaf1]">
       <svg width={size.w} height={size.h} className="block touch-manipulation select-none">
@@ -97,6 +139,28 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick }: Pro
               </g>
             );
           })}
+          {labels &&
+            labelLayout.map((it) => {
+              const active = selectedId === it.q.id;
+              return (
+                <text
+                  key={'label-' + it.q.id}
+                  x={it.cx}
+                  y={it.cy}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={it.size / zoom}
+                  fontWeight={active ? 700 : 600}
+                  fill={active ? '#0f172a' : '#334155'}
+                  stroke="#ffffff"
+                  strokeWidth={3 / zoom}
+                  paintOrder="stroke"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {it.q.name}
+                </text>
+              );
+            })}
         </g>
       </svg>
 

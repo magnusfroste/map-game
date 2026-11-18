@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Continent, continentLabels } from '@/data/allQuestions';
+import OwnPlaces from '@/components/OwnPlaces';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -40,9 +41,14 @@ const Landing = () => {
             </button>
           ))}
         </div>
+
+        <div className="mt-8">
+          <OwnPlaces />
+        </div>
       </main>
     </div>
   );
 };
+
 
 export default Landing;
