@@ -30,9 +30,17 @@ const PAD = 18;
 
 const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, labels, selectedId }: Props) => {
   const box = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ w: 800, h: 560 });
   const [zoom, setZoom] = useState(1);
   const [hover, setHover] = useState<string | null>(null);
+  const [hintBort, setHintBort] = useState(false);
+  const [miss, setMiss] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setHintBort(true), 9000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!box.current) return;
@@ -67,7 +75,9 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, label
     return `translate(${cx} ${cy}) scale(${zoom}) translate(${-cx} ${-cy})`;
   }, [size, zoom]);
 
-  const pinR = 7 / zoom;
+  const pinR = 8 / zoom;
+  // Träffradie i skärmpixlar: ett barn ska träffa rätt prick med fingret.
+  const TRAFF = 30;
 
   // Etiketter utan överlapp: prova över, under, höger, vänster och hoppa över
   // den som inte får plats. Vald plats prioriteras och ritas först.
@@ -108,9 +118,40 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, label
     return out;
   }, [labels, questions, project, pinR, size.w, size.h, selectedId]);
 
+  // Närmaste prick vinner - även om fingret landar mellan två nålar.
+  const pickNearest = (clientX: number, clientY: number) => {
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+    const r = svgEl.getBoundingClientRect();
+    const cx = size.w / 2;
+    const cy = size.h / 2;
+    const x = cx + ((clientX - r.left) * (size.w / r.width) - cx) / zoom;
+    const y = cy + ((clientY - r.top) * (size.h / r.height) - cy) / zoom;
+    let best: { q: GeographyQuestion; d: number } | null = null;
+    for (const q of questions) {
+      const p = project([q.lng, q.lat]);
+      if (!p) continue;
+      const d = Math.hypot(p[0] - x, p[1] - y) * zoom;
+      if (!best || d < best.d) best = { q, d };
+    }
+    if (best && best.d <= TRAFF) {
+      onPick(best.q);
+      return;
+    }
+    // Träffade inget: säg det, i stället för att ingenting händer.
+    setMiss(true);
+    window.setTimeout(() => setMiss(false), 1800);
+  };
+
   return (
     <div ref={box} className="absolute inset-0 overflow-hidden bg-[#dfeaf1]">
-      <svg width={size.w} height={size.h} className="block touch-manipulation select-none">
+      <svg
+        ref={svgRef}
+        width={size.w}
+        height={size.h}
+        className="block touch-manipulation select-none"
+        onClick={(e) => pickNearest(e.clientX, e.clientY)}
+      >
         <g transform={zoomed}>
           <rect width={size.w} height={size.h} fill="#dfeaf1" />
           {land.features.map((f: any, i: number) => (
@@ -129,10 +170,9 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, label
               <g
                 key={q.id}
                 transform={`translate(${x} ${y})`}
-                style={{ cursor: 'pointer' }}
                 onPointerEnter={() => setHover(q.id)}
                 onPointerLeave={() => setHover(null)}
-                onClick={() => onPick(q)}
+                style={{ cursor: 'pointer', pointerEvents: 'none' }}
               >
                 <circle r={pinR + 6 / zoom} fill="transparent" />
                 <circle r={base} fill={fill} stroke="#fff" strokeWidth={2 / zoom} pointerEvents="none" />
@@ -164,11 +204,25 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, label
         </g>
       </svg>
 
+      {miss && (
+        <div className="pointer-events-none absolute bottom-14 left-1/2 -translate-x-1/2 rounded-md bg-slate-800/95 px-3 py-2 text-sm font-medium text-white shadow">
+          Tryck på en blå prick
+        </div>
+      )}
+
+      {size.w < 520 && !hintBort && (
+        <div className="pointer-events-none absolute bottom-2 left-2 right-2 rounded-md bg-white/95 px-3 py-2 text-[12px] leading-snug text-slate-600 shadow-sm">
+          <span className="pointer-events-auto">
+            Kartan är gjord för iPad – på en telefon blir prickarna små. Tryck på <b>+</b> för att zooma.
+          </span>
+        </div>
+      )}
+
       <div className="absolute right-3 top-3 flex flex-col gap-1">
         <button
           type="button"
           onClick={() => setZoom((z) => Math.min(4, z * 1.5))}
-          className="h-9 w-9 rounded-md border bg-white/95 text-lg font-bold leading-none text-slate-700 shadow-sm active:scale-95"
+          className="h-11 w-11 rounded-md border bg-white/95 text-xl font-bold leading-none text-slate-700 shadow-sm active:scale-95"
           aria-label="Zooma in"
         >
           +
@@ -176,7 +230,7 @@ const MapCanvas = ({ questions, correctId, pickedId, reveal, view, onPick, label
         <button
           type="button"
           onClick={() => setZoom((z) => Math.max(1, z / 1.5))}
-          className="h-9 w-9 rounded-md border bg-white/95 text-lg font-bold leading-none text-slate-700 shadow-sm active:scale-95"
+          className="h-11 w-11 rounded-md border bg-white/95 text-xl font-bold leading-none text-slate-700 shadow-sm active:scale-95"
           aria-label="Zooma ut"
         >
           −
