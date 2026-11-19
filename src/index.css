@@ -1,3 +1,9 @@
+/* Fredoka - Skolappar-typsnitt */
+@font-face { font-family: 'Fredoka'; font-weight: 400; font-style: normal; font-display: swap; src: url('/fonts/fredoka-400.ttf') format('truetype'); }
+@font-face { font-family: 'Fredoka'; font-weight: 500; font-style: normal; font-display: swap; src: url('/fonts/fredoka-500.ttf') format('truetype'); }
+@font-face { font-family: 'Fredoka'; font-weight: 600; font-style: normal; font-display: swap; src: url('/fonts/fredoka-600.ttf') format('truetype'); }
+@font-face { font-family: 'Fredoka'; font-weight: 700; font-style: normal; font-display: swap; src: url('/fonts/fredoka-700.ttf') format('truetype'); }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -126,4 +132,8 @@
   .mapboxgl-ctrl-group button {
     @apply bg-card text-card-foreground hover:bg-accent;
   }
+}
+/* Fredoka - gäller hela appen */
+html, body, button, input, select, textarea {
+  font-family: 'Fredoka', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
