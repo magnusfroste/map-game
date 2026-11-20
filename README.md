@@ -6,6 +6,8 @@ runt 200 platser, ingen inloggning.
 
 **Spela:** https://karttest.skolappar.com · En del av [Skolappar](https://www.skolappar.com) – pedagogiska appar av föräldrar · öppen källkod (MIT)
 
+![Karttest](public/kort.png)
+
 Började som ett Lovable-projekt och körs nu fristående, med en egen offlinekarta.
 
 ## Vad du kan göra
