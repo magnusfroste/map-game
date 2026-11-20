@@ -45,7 +45,7 @@
   #startskarm {
     position: fixed; inset: 0; z-index: 2147483000;
     background: #faf7f2; color: #14181f;
-    font-family: Inter, "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-family: "Fredoka", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     display: grid; place-items: center;
     padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
@@ -116,16 +116,13 @@
       <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11-6.86a1 1 0 0 0 0-1.7l-11-6.86A1 1 0 0 0 8 5.14Z"/></svg>
       Spela
     </button>
-    <p class="note" style="margin-top:clamp(12px,2vmin,18px)">
-      <a href="/egna" style="font-weight:600">Lägg in egna platser</a>
-    </p>
     <p class="note">Gratis · ingen inloggning · <a href="https://www.skolappar.com">skolappar.com</a></p>
   </div>
 </div>
 <script>
   (function () {
     var s = document.getElementById('startskarm');
-    var path = location.pathname.replace(/index\.html$/, '');
+    var path = location.pathname.replace(/index[.]html$/, '');
     if (path !== '/' && path !== '') { s.remove(); return; }
     var d = document.documentElement, b = document.body;
     var prev = [d.style.overflow, b.style.overflow];
