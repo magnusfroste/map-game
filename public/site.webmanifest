@@ -1,1 +1,23 @@
-{"name": "Karttest", "short_name": "Karttest", "description": "Karttest är ett kostnadsfritt geografispel för barn: du får en plats och klickar på kartan där du tror den ligger, och rätt svar visas direkt. Fyra världsdelar och över hundra länder, huvudstäder, floder och berg. Fungerar på iPad, mobil och dator utan inloggning.", "start_url": "/", "display": "standalone", "background_color": "#e2662a", "theme_color": "#e2662a", "icons": [{"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}, {"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}]}
+{
+  "name": "Karttest",
+  "short_name": "Karttest",
+  "description": "Karttest är ett kostnadsfritt geografispel för barn: du får en plats och klickar på kartan där du tror den ligger, och rätt svar visas direkt. Fyra världsdelar och över hundra länder, huvudstäder, floder och berg. Fungerar på iPad, mobil och dator utan inloggning.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e2662a",
+  "theme_color": "#e2662a",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "scope": "/",
+  "lang": "sv"
+}
