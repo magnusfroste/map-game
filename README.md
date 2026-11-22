@@ -8,7 +8,7 @@ runt 200 platser, ingen inloggning.
 
 ![Karttest](public/kort.png)
 
-Började som ett Lovable-projekt och körs nu fristående, med en egen offlinekarta.
+Körs fristående, med en egen offlinekarta.
 
 ## Vad du kan göra
 
