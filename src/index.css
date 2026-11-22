@@ -137,3 +137,20 @@
 html, body, button, input, select, textarea {
   font-family: 'Fredoka', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
+
+/* ---- iPad landskap: sista iPad-rundan. Egna platser-kortet flyttas till
+   höger spalt i stället för att staplas under världsdelarna ---- */
+@media (min-width: 820px) and (max-height: 860px) {
+  header.mx-auto.max-w-3xl { padding-top: 0.75rem; }
+  header.mx-auto.max-w-3xl h1 { font-size: 2.25rem; margin-top: 0.5rem; }
+  header.mx-auto.max-w-3xl p { font-size: 1rem; margin-top: 0.35rem; }
+  header.mx-auto.max-w-3xl button { margin-top: 0.75rem; }
+  main.mx-auto.max-w-3xl {
+    max-width: 64rem; padding-top: 0.5rem; padding-bottom: 0.5rem;
+    display: grid; grid-template-columns: minmax(15rem, 24rem) 1fr;
+    column-gap: 1.25rem; align-items: start;
+  }
+  main.mx-auto.max-w-3xl > h2 { grid-column: 1; margin-bottom: 0.5rem; }
+  main.mx-auto.max-w-3xl > .grid { grid-column: 1; }
+  main.mx-auto.max-w-3xl > .mt-8 { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+}
