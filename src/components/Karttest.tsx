@@ -10,6 +10,7 @@ import type { GeographyQuestion } from '@/data/geographyQuestions';
 import { Continent, continentLabels } from '@/data/allQuestions';
 import MapCanvas from '@/components/MapCanvas';
 import StudyView from '@/components/StudyView';
+import { report } from '@/lib/skolappar';
 
 type Mode = 'studera' | 'testa';
 
@@ -49,6 +50,7 @@ const Karttest = ({ questions, continent = 'amerika', ownLabel, isOwn, onClearOw
     const left = visiblePins.filter((q) => !used.has(q.id));
     if (left.length === 0) {
       setCurrent(null);
+      if (answered > 0) report('round_done', Math.round((score / answered) * 100));
       return;
     }
     setCurrent(left[Math.floor(Math.random() * left.length)]);
@@ -66,6 +68,7 @@ const Karttest = ({ questions, continent = 'amerika', ownLabel, isOwn, onClearOw
     setPractice(null);
     setPicked(null);
     setCurrent(nextMode === 'testa' ? left[Math.floor(Math.random() * left.length)] ?? null : null);
+    if (nextMode === 'testa' && left.length > 0) report('round_start');
   };
 
   const pick = (q: GeographyQuestion) => {
@@ -87,6 +90,7 @@ const Karttest = ({ questions, continent = 'amerika', ownLabel, isOwn, onClearOw
     setWrong([]);
     setPicked(null);
     setCurrent(list[Math.floor(Math.random() * list.length)]);
+    report('round_start');
   };
 
   if (!started) {
