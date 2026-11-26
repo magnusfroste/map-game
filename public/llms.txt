@@ -6,6 +6,6 @@ Karttest är en gratis skolapp för geografiträning. Eleven väljer världsdel 
 
 ## Viktiga länkar
 
-- [Startsida](https://karttest.skolappar.com/)
-- [Starta quizet](https://karttest.skolappar.com/quiz)
-- [Skolappar.com – fler pedagogiska appar](https://www.skolappar.com/)
+- [Startsida](https://karttest.skolappar.org/)
+- [Starta quizet](https://karttest.skolappar.org/quiz)
+- [Skolappar.com – fler pedagogiska appar](https://www.skolappar.org/)

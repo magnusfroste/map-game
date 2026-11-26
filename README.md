@@ -4,7 +4,7 @@ Ett karttest i geografi för mellanstadiet och uppåt. Eleven får namnet på et
 huvudstad, en flod eller ett berg och klickar på kartan där platsen ligger. Fyra världsdelar,
 runt 200 platser, ingen inloggning.
 
-**Spela:** https://karttest.skolappar.com · En del av [Skolappar](https://www.skolappar.com) – pedagogiska appar av föräldrar · öppen källkod (MIT)
+**Spela:** https://karttest.skolappar.org · En del av [Skolappar](https://www.skolappar.org) – pedagogiska appar av föräldrar · öppen källkod (MIT)
 
 ![Karttest](public/kort.png)
 

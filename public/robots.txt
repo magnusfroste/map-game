@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://karttest.skolappar.com/sitemap.xml
+Sitemap: https://karttest.skolappar.org/sitemap.xml
